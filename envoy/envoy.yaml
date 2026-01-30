@@ -27,6 +27,14 @@ static_resources:
                             prefix: "/users"
                           route:
                             cluster: users_service
+                        - match:
+                            prefix: "/orders"
+                          route:
+                            cluster: orders_service
+                        - match:
+                            prefix: "/products"
+                          route:
+                            cluster: products_service
                 http_filters:
                   - name: envoy.filters.http.router
                     typed_config:
@@ -46,3 +54,29 @@ static_resources:
                     socket_address:
                       address: 192.168.1.3
                       port_value: 3001
+    - name: orders_service
+      connect_timeout: 5s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: orders_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 192.168.1.3
+                      port_value: 3002
+    - name: products_service
+      connect_timeout: 5s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: products_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 192.168.1.3
+                      port_value: 3003

@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.28-latest
+    ports:
+      - 10000:10000
+      - 9901:9901
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml
+    command: /usr/local/bin/envoy -c /etc/envoy/envoy.yaml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -23,14 +23,39 @@ static_resources:
                     - name: backend
                       domains: ["*"]
                       routes:
+                        # Header-based routing: requests with X-Canary: true go to canary cluster
+                        - match:
+                            prefix: "/users"
+                            headers:
+                              - name: x-canary
+                                string_match:
+                                  exact: "true"
+                          route:
+                            cluster: canary_users_service
                         - match:
                             prefix: "/users"
                           route:
                             cluster: users_service
                         - match:
                             prefix: "/orders"
+                            headers:
+                              - name: x-canary
+                                string_match:
+                                  exact: "true"
+                          route:
+                            cluster: canary_orders_service
+                        - match:
+                            prefix: "/orders"
                           route:
                             cluster: orders_service
+                        - match:
+                            prefix: "/products"
+                            headers:
+                              - name: x-canary
+                                string_match:
+                                  exact: "true"
+                          route:
+                            cluster: canary_products_service
                         - match:
                             prefix: "/products"
                           route:
@@ -54,6 +79,19 @@ static_resources:
                     socket_address:
                       address: 192.168.1.3
                       port_value: 3001
+    - name: canary_users_service
+      connect_timeout: 5s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: canary_users_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 192.168.1.3
+                      port_value: 3001
     - name: orders_service
       connect_timeout: 5s
       type: STRICT_DNS
@@ -67,12 +105,38 @@ static_resources:
                     socket_address:
                       address: 192.168.1.3
                       port_value: 3002
+    - name: canary_orders_service
+      connect_timeout: 5s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: canary_orders_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 192.168.1.3
+                      port_value: 3002
     - name: products_service
       connect_timeout: 5s
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
       load_assignment:
         cluster_name: products_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 192.168.1.3
+                      port_value: 3003
+    - name: canary_products_service
+      connect_timeout: 5s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: canary_products_service
         endpoints:
           - lb_endpoints:
               - endpoint:

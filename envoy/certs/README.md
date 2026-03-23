@@ -14,6 +14,8 @@
 
 Private keys (`*.key`) are gitignored.
 
+**Admin backend** (optional fourth service): `services/admin` listens on **:3010** (HTTPS, same upstream cert). Start with `go run .` from `services/admin` when using `/admin/*` or `X-Admin: true` routing in Envoy.
+
 ## Troubleshooting
 
 - **`WRONG_VERSION_NUMBER` from Envoy** — Almost always means Envoy is speaking **TLS** to an upstream that is still **plain HTTP** (old `go run` still bound to the port). Stop processes on **3001–3003** and restart the three services; confirm logs show **`HTTPS/TLS`** and printed **`cert=`** paths.

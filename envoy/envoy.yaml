@@ -23,7 +23,12 @@ static_resources:
                     - name: backend
                       domains: ["*"]
                       routes:
-                        # Header-based routing: requests with X-Canary: true go to canary cluster
+                        # Path-based: all /admin/* → admin backend (port 3010)
+                        - match:
+                            prefix: "/admin"
+                          route:
+                            cluster: admin_service
+                        # X-Canary still wins first for /users when both could apply
                         - match:
                             prefix: "/users"
                             headers:
@@ -32,6 +37,15 @@ static_resources:
                                   exact: "true"
                           route:
                             cluster: canary_users_service
+                        # Same path /users → admin backend when X-Admin: true (user vs admin traffic)
+                        - match:
+                            prefix: "/users"
+                            headers:
+                              - name: x-admin
+                                string_match:
+                                  exact: "true"
+                          route:
+                            cluster: admin_service
                         - match:
                             prefix: "/users"
                           route:
@@ -101,6 +115,10 @@ static_resources:
                             value: h3=":10001"; ma=86400
                       routes:
                         - match:
+                            prefix: "/admin"
+                          route:
+                            cluster: admin_service
+                        - match:
                             prefix: "/users"
                             headers:
                               - name: x-canary
@@ -108,6 +126,14 @@ static_resources:
                                   exact: "true"
                           route:
                             cluster: canary_users_service
+                        - match:
+                            prefix: "/users"
+                            headers:
+                              - name: x-admin
+                                string_match:
+                                  exact: "true"
+                          route:
+                            cluster: admin_service
                         - match:
                             prefix: "/users"
                           route:
@@ -169,11 +195,13 @@ static_resources:
                 route_config:
                   name: local_routes
                   virtual_hosts:
-                    # Copy the same virtual_hosts / routes as main_listener (backend + canary rules)
                     - name: backend
                       domains: ["*"]
                       routes:
-                        # Header-based routing: requests with X-Canary: true go to canary cluster
+                        - match:
+                            prefix: "/admin"
+                          route:
+                            cluster: admin_service
                         - match:
                             prefix: "/users"
                             headers:
@@ -182,6 +210,14 @@ static_resources:
                                   exact: "true"
                           route:
                             cluster: canary_users_service
+                        - match:
+                            prefix: "/users"
+                            headers:
+                              - name: x-admin
+                                string_match:
+                                  exact: "true"
+                          route:
+                            cluster: admin_service
                         - match:
                             prefix: "/users"
                           route:
@@ -361,6 +397,32 @@ static_resources:
                     socket_address:
                       address: host.docker.internal
                       port_value: 3003
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: host.docker.internal
+          common_tls_context:
+            tls_params:
+              tls_minimum_protocol_version: TLSv1_2
+              tls_maximum_protocol_version: TLSv1_3
+            validation_context:
+              trusted_ca:
+                filename: /etc/envoy/certs/upstream-ca.crt
+    - name: admin_service
+      connect_timeout: 5s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: admin_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: host.docker.internal
+                      port_value: 3010
       transport_socket:
         name: envoy.transport_sockets.tls
         typed_config:

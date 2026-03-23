@@ -1,2 +1,5 @@
 .DS_Store
-envoy/certs/
+# TLS private keys and ephemeral CSR/serial (public .crt may exist locally)
+envoy/certs/*.key
+envoy/certs/*.csr
+envoy/certs/*.srl

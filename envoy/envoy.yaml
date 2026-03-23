@@ -231,6 +231,18 @@ static_resources:
                     socket_address:
                       address: host.docker.internal
                       port_value: 3001
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: host.docker.internal
+          common_tls_context:
+            tls_params:
+              tls_minimum_protocol_version: TLSv1_2
+              tls_maximum_protocol_version: TLSv1_3
+            validation_context:
+              trusted_ca:
+                filename: /etc/envoy/certs/upstream-ca.crt
     - name: canary_users_service
       connect_timeout: 5s
       type: STRICT_DNS
@@ -245,6 +257,18 @@ static_resources:
                     socket_address:
                       address: host.docker.internal
                       port_value: 3001
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: host.docker.internal
+          common_tls_context:
+            tls_params:
+              tls_minimum_protocol_version: TLSv1_2
+              tls_maximum_protocol_version: TLSv1_3
+            validation_context:
+              trusted_ca:
+                filename: /etc/envoy/certs/upstream-ca.crt
     - name: orders_service
       connect_timeout: 5s
       type: STRICT_DNS
@@ -259,6 +283,18 @@ static_resources:
                     socket_address:
                       address: host.docker.internal
                       port_value: 3002
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: host.docker.internal
+          common_tls_context:
+            tls_params:
+              tls_minimum_protocol_version: TLSv1_2
+              tls_maximum_protocol_version: TLSv1_3
+            validation_context:
+              trusted_ca:
+                filename: /etc/envoy/certs/upstream-ca.crt
     - name: canary_orders_service
       connect_timeout: 5s
       type: STRICT_DNS
@@ -273,6 +309,18 @@ static_resources:
                     socket_address:
                       address: host.docker.internal
                       port_value: 3002
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: host.docker.internal
+          common_tls_context:
+            tls_params:
+              tls_minimum_protocol_version: TLSv1_2
+              tls_maximum_protocol_version: TLSv1_3
+            validation_context:
+              trusted_ca:
+                filename: /etc/envoy/certs/upstream-ca.crt
     - name: products_service
       connect_timeout: 5s
       type: STRICT_DNS
@@ -287,6 +335,18 @@ static_resources:
                     socket_address:
                       address: host.docker.internal
                       port_value: 3003
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: host.docker.internal
+          common_tls_context:
+            tls_params:
+              tls_minimum_protocol_version: TLSv1_2
+              tls_maximum_protocol_version: TLSv1_3
+            validation_context:
+              trusted_ca:
+                filename: /etc/envoy/certs/upstream-ca.crt
     - name: canary_products_service
       connect_timeout: 5s
       type: STRICT_DNS
@@ -301,3 +361,15 @@ static_resources:
                     socket_address:
                       address: host.docker.internal
                       port_value: 3003
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: host.docker.internal
+          common_tls_context:
+            tls_params:
+              tls_minimum_protocol_version: TLSv1_2
+              tls_maximum_protocol_version: TLSv1_3
+            validation_context:
+              trusted_ca:
+                filename: /etc/envoy/certs/upstream-ca.crt

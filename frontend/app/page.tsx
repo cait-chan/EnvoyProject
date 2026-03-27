@@ -26,12 +26,37 @@ async function getClusters() {
 
 type StatEntry = { name: string; value?: number };
 
+/** Envoy JSON sometimes uses number, string, or typed metrics arrays. */
+function statNum(item: Record<string, unknown>): number {
+  const v = item.value;
+  if (typeof v === "number" && !Number.isNaN(v)) return v;
+  if (typeof v === "string") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+  const metrics = item.metrics;
+  if (Array.isArray(metrics)) {
+    for (const m of metrics) {
+      if (
+        m &&
+        typeof m === "object" &&
+        "value" in m &&
+        typeof (m as { value: unknown }).value === "number"
+      ) {
+        return (m as { value: number }).value;
+      }
+    }
+  }
+  return 0;
+}
+
 function parseStats(stats: unknown) {
   const out = {
     totalRequests: 0,
     activeConnections: 0,
     clusterRequests: {} as Record<string, number>,
     clusterConnections: {} as Record<string, number>,
+    clusterUpstreamActive: {} as Record<string, number>,
   };
   if (!stats || typeof stats !== "object" || !("stats" in stats)) return out;
   const list = (stats as { stats?: StatEntry[] }).stats;
@@ -40,17 +65,31 @@ function parseStats(stats: unknown) {
   for (const item of list) {
     if (!item || typeof item.name !== "string") continue;
     const name = item.name;
-    const value = typeof item.value === "number" ? item.value : 0;
-    if (name.includes("downstream_rq_total") && !name.includes("cluster"))
-      out.totalRequests = value;
-    if (name.includes("downstream_cx_active")) out.activeConnections = value;
+    const raw = item as unknown as Record<string, unknown>;
+    const value = statNum(raw);
+    // Sum HCM request totals for ingress listeners (exclude http.admin = :9901).
+    const httpRqTotal = name.match(/^http\.([^.]+)\.downstream_rq_total$/);
+    if (httpRqTotal && httpRqTotal[1] !== "admin") {
+      out.totalRequests += value;
+    }
+    // Active *client→Envoy* connections: use listener gauges (excludes :9901 admin listener).
+    // http.*.downstream_cx_active can be missing or 0 in JSON depending on scope; listeners match UX.
+    if (
+      name.startsWith("listener.") &&
+      name.endsWith(".downstream_cx_active") &&
+      !name.includes("_9901")
+    ) {
+      out.activeConnections += value;
+    }
     const m = name.match(
-      /^cluster\.([^.]+)\.(upstream_rq_total|upstream_cx_total)$/,
+      /^cluster\.([^.]+)\.(upstream_rq_total|upstream_cx_total|upstream_cx_active)$/,
     );
     if (m) {
       const [, cluster, kind] = m;
       if (kind === "upstream_rq_total") out.clusterRequests[cluster] = value;
-      else out.clusterConnections[cluster] = value;
+      else if (kind === "upstream_cx_total")
+        out.clusterConnections[cluster] = value;
+      else out.clusterUpstreamActive[cluster] = value;
     }
   }
   return out;
@@ -92,6 +131,7 @@ export default async function DashboardPage() {
         ...new Set([
           ...Object.keys(metrics.clusterRequests),
           ...Object.keys(metrics.clusterConnections),
+          ...Object.keys(metrics.clusterUpstreamActive),
         ]),
       ]
     : [];
@@ -149,17 +189,26 @@ export default async function DashboardPage() {
               Traffic per cluster
             </h2>
             <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-              <table className="w-full text-left text-sm">
+              <table className="w-full table-fixed text-left text-sm">
+                <colgroup>
+                  <col className="w-[40%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[20%]" />
+                </colgroup>
                 <thead>
                   <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-800/50">
-                    <th className="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300">
+                    <th className="min-w-0 px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300">
                       Cluster
                     </th>
-                    <th className="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300">
+                    <th className="px-4 py-3 text-center font-medium text-zinc-700 dark:text-zinc-300">
                       Requests
                     </th>
-                    <th className="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300">
-                      Connections
+                    <th className="px-4 py-3 text-center font-medium text-zinc-700 dark:text-zinc-300">
+                      Upstream opened (total)
+                    </th>
+                    <th className="px-4 py-3 text-center font-medium text-zinc-700 dark:text-zinc-300">
+                      Upstream active
                     </th>
                   </tr>
                 </thead>
@@ -169,14 +218,17 @@ export default async function DashboardPage() {
                       key={name}
                       className="border-b border-zinc-100 last:border-0 dark:border-zinc-800"
                     >
-                      <td className="px-4 py-3 font-mono text-zinc-900 dark:text-zinc-100">
+                      <td className="min-w-0 break-all px-4 py-3 font-mono text-sm text-zinc-900 dark:text-zinc-100">
                         {name}
                       </td>
-                      <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                      <td className="px-4 py-3 text-center tabular-nums text-zinc-600 dark:text-zinc-400">
                         {metrics.clusterRequests[name] ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                      <td className="px-4 py-3 text-center tabular-nums text-zinc-600 dark:text-zinc-400">
                         {metrics.clusterConnections[name] ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-center tabular-nums text-zinc-600 dark:text-zinc-400">
+                        {metrics.clusterUpstreamActive[name] ?? "—"}
                       </td>
                     </tr>
                   ))}

@@ -2,6 +2,10 @@
 
 A small **service mesh / API gateway** demo: **[Envoy Proxy](https://www.envoyproxy.io/)** sits in front of several **Go** microservices, with **TLS** on the client→Envoy and Envoy→upstream paths, **HTTP/3 (QUIC)** on a dedicated listener, **header-based canary** routing, and **admin vs public** traffic split. A **Next.js** dashboard and a **Go** “API gateway” server read Envoy’s **admin API** for metrics.
 
+## Demo
+
+Walkthrough (video): [YouTube — Envoy project demo](https://youtu.be/KArwl4MfmQ4)
+
 ---
 
 ## Architecture

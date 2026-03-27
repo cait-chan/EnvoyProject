@@ -4,7 +4,11 @@ A small **service mesh / API gateway** demo: **[Envoy Proxy](https://www.envoypr
 
 ## Demo
 
-Walkthrough (video): [YouTube — Envoy project demo](https://youtu.be/KArwl4MfmQ4)
+Watch on YouTube (click the image):
+
+[![Envoy project demo — play on YouTube](https://img.youtube.com/vi/KArwl4MfmQ4/hqdefault.jpg)](https://youtu.be/KArwl4MfmQ4)
+
+Direct link: [youtu.be/KArwl4MfmQ4](https://youtu.be/KArwl4MfmQ4)
 
 ---
 

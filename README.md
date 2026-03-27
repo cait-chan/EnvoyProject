@@ -6,9 +6,9 @@ A small **service mesh / API gateway** demo: **[Envoy Proxy](https://www.envoypr
 
 Watch on YouTube (click the image):
 
-[![Envoy project demo — play on YouTube](https://img.youtube.com/vi/KArwl4MfmQ4/hqdefault.jpg)](https://youtu.be/KArwl4MfmQ4)
+[![Envoy project demo — play on YouTube](https://img.youtube.com/vi/mIvvnr9bVZA/hqdefault.jpg)](https://youtu.be/mIvvnr9bVZA)
 
-Direct link: [youtu.be/KArwl4MfmQ4](https://youtu.be/KArwl4MfmQ4)
+Direct link: [youtu.be/mIvvnr9bVZA](https://youtu.be/mIvvnr9bVZA)
 
 ---
 
